@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"log"
+	"net/http"
 	"os"
 )
 
@@ -26,7 +29,20 @@ func help() {
 }
 
 func install(pkg string, version string) {
-	fmt.Printf("Installing %s@%s\n", pkg, version)
+	res, err := http.Get("https://registry010.theboys619.repl.co/packages/" + pkg + "@" + version)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	body := res.Body
+
+	c, err := io.Copy(os.Stdout, body)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Fatal(c)
 }
 
 func main() {
