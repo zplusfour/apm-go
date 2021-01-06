@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 // type Package struct {
@@ -28,21 +30,32 @@ func help() {
 	}
 }
 
-func install(pkg string, version string) {
-	res, err := http.Get("https://registry010.theboys619.repl.co/packages/" + pkg + "@" + version)
+type Package struct {
+	file []string
+}
+
+func safe(e error) {
+	log.Fatal(e)
+}
+
+func install(pkg string) {
+	splitted := strings.Split(pkg, "@")
+	res, err := http.Get("https://registry010.theboys619.repl.co/packages/" + splitted[0] + "@" + splitted[1])
 
 	if err != nil {
-		log.Fatal(err)
+		safe(err)
 	}
-	body := res.Body
 
-	c, err := io.Copy(os.Stdout, body)
+	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		log.Fatal(err)
+		safe(err)
 	}
 
-	log.Fatal(c)
+	data := string(body)
+	pkg := new(Package)
+
+	json.Unmarshal([]byte(data), &pkg)
 }
 
 func main() {
@@ -56,11 +69,8 @@ func main() {
 			if len(args) < 3 {
 				fmt.Println("Please insert a package name and a version")
 			} else {
-				if len(args) < 4 {
-					fmt.Println("Please insert a version")
-				} else {
-					install(args[2], args[3])
-				}
+				pkg := args[2]
+				install(pkg)
 			}
 		}
 	}
